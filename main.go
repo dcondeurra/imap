@@ -166,7 +166,7 @@ func log(connNum int, folder string, msg interface{}) {
 }
 
 // New makes a new imap
-func New(username string, password string, host string, port int) (d *Dialer, err error) {
+func New(username string, password string, host string, port int, config *tls.Config) (d *Dialer, err error) {
 	nextConnNumMutex.RLock()
 	connNum := nextConnNum
 	nextConnNumMutex.RUnlock()
@@ -180,7 +180,7 @@ func New(username string, password string, host string, port int) (d *Dialer, er
 			log(connNum, "", aurora.Green(aurora.Bold("establishing connection")))
 		}
 		var conn *tls.Conn
-		conn, err = tls.Dial("tcp", host+":"+strconv.Itoa(port), nil)
+		conn, err = tls.Dial("tcp", host+":"+strconv.Itoa(port), config)
 		if err != nil {
 			if Verbose {
 				log(connNum, "", aurora.Red(aurora.Bold(fmt.Sprintf("failed to connect: %s", err))))
@@ -228,7 +228,8 @@ func New(username string, password string, host string, port int) (d *Dialer, er
 // Clone returns a new connection with the same connection information
 // as the one this is being called on
 func (d *Dialer) Clone() (d2 *Dialer, err error) {
-	d2, err = New(d.Username, d.Password, d.Host, d.Port)
+	// TODO: include connection config, for now use nil
+	d2, err = New(d.Username, d.Password, d.Host, d.Port, nil)
 	// d2.Verbose = d1.Verbose
 	if d.Folder != "" {
 		err = d2.SelectFolder(d.Folder)
